@@ -25,6 +25,7 @@ npm-debug.log
 
 # Build
 dist
+test/**/*.js
 
 # Docs
 gh-pages
