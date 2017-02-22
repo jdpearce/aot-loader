@@ -55,6 +55,9 @@ const INJECTOR = /(\w+?)Injector/;
 export class AotPlugin {
   context: AotContext;
 
+  num = 0;
+  numAsync = 0;
+
   files: string[] = [];
 
   // dependencies
@@ -196,14 +199,17 @@ export class AotPlugin {
         // we force all resolves to wait for the compilation to finish, except for ones for
         // resources (styleUrls, templateUrl), otherwise we end up with outdated files
         const requestExtension = extname(request.request);
-        if (!this.context.resourceExtensions.includes(requestExtension)) {
-          try {
+        const isNativeModule = request.request.charAt(0) !== '.';
+        const isNodeModule = /node_modules/.test(request.request);
+        const isResource = this.context.resourceExtensions.includes(requestExtension);
+
+        try {
+          if (!isResource && !isNativeModule && !isNodeModule) {
             await this.compilePromise;
-          } catch (err) {
-            return callback();
           }
+        } finally {
+          callback();
         }
-        callback();
       });
     });
   }
@@ -242,7 +248,6 @@ export class AotPlugin {
     // remove any symbols for deleted files
     this.symbols = this.symbols
       .filter((symbol) => this.removeDeletedFiles([symbol.filePath]).length);
-
     // clear the cache for our files
     for (const file of files) {
       compiler._summaryResolver.summaryCache.delete(file);
@@ -254,7 +259,6 @@ export class AotPlugin {
     // filter out any non-source files
     const sourceFiles = files
       .filter((fileName) => this.ngCompilerHost.isSourceFile(fileName));
-
     // resolve the symbols for our source files
     for (const sourceFile of sourceFiles) {
       const symbols = compiler._symbolResolver.getSymbolsOf(sourceFile);
@@ -270,7 +274,6 @@ export class AotPlugin {
     // analyze and validate the ngModules for the files that are being compiled
     let { ngModuleByPipeOrDirective: ngModule, files: filesToCompile, ngModules } =
       analyzeAndValidateNgModules(this.symbols, this.ngCompilerHost, compiler._metadataResolver);
-
     if (this.ranInitialCompile) {
       // we've already ran the first compilation, so we want to restrict the compilation
       // to just the changed files, not all files
@@ -291,7 +294,6 @@ export class AotPlugin {
         });
       }
     }
-
     // wait for the metadata collection of all the ngModules to complete
     await Promise.all(ngModules.map(loadMetadata));
 
@@ -310,6 +312,9 @@ export class AotPlugin {
       if (/ngsummary\.json$/.test(emitPath)) {
         continue;
       }
+      console.log('GENFILE::');
+      console.log(genFileUrl);
+      console.log(source);
       const sourceFile = createSourceFile(emitPath, source, ScriptTarget.Latest);
       this.sourceFileCache.set(emitPath, sourceFile);
 
@@ -343,7 +348,6 @@ export class AotPlugin {
           await this.compileFiles(this.moduleDependencies.get(srcFileUrl));
         }
       }
-
       this.host.writeFile(emitPath, generatedFile.source);
     }
   }
