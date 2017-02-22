@@ -109,6 +109,8 @@ export class AotPlugin {
       angularCompilerOptions.entryModule = config.entryModule;
     }
 
+    this.tsConfig.angularCompilerOptions = angularCompilerOptions;
+
     const [path, module] = angularCompilerOptions.entryModule.split('#');
     this.entryModule = {path, module};
 
