@@ -312,9 +312,6 @@ export class AotPlugin {
       if (/ngsummary\.json$/.test(emitPath)) {
         continue;
       }
-      console.log('GENFILE::');
-      console.log(genFileUrl);
-      console.log(source);
       const sourceFile = createSourceFile(emitPath, source, ScriptTarget.Latest);
       this.sourceFileCache.set(emitPath, sourceFile);
 
