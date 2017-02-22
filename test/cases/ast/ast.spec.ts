@@ -2,26 +2,9 @@ import { expect } from 'chai';
 import { CallExpression, ImportDeclaration, PropertyAccessExpression, SyntaxKind } from 'typescript';
 
 import * as path from 'path';
-import * as webpack from 'webpack';
 
-import { createSource, findNodes, getModule } from '../utils';
+import { createSource, findNodes, getModule, run } from '../utils';
 import { config } from './assets/webpack.config';
-
-const run = async () => {
-  return new Promise((resolve, reject) => {
-    webpack(config, (err, stats) => {
-      if (err) {
-        reject(err);
-      }
-
-      if (stats.hasErrors()) {
-        reject(stats.toString());
-      }
-
-      resolve(stats);
-    });
-  });
-};
 
 describe('AST code swapping', async () => {
   let sourceFile;
@@ -29,7 +12,7 @@ describe('AST code swapping', async () => {
   let calls;
 
   before(async () => {
-    sourceFile = createSource(await run(), path.resolve(__dirname, './assets/app/main.ts'));
+    sourceFile = createSource(await run(config), path.resolve(__dirname, './assets/app/main.ts'));
     calls = findNodes<CallExpression>(sourceFile, SyntaxKind.CallExpression);
     imports = findNodes<ImportDeclaration>(sourceFile, SyntaxKind.ImportDeclaration).map(getModule);
   });

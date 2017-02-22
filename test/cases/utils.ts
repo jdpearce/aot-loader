@@ -20,6 +20,7 @@ import {
   TypeNode,
   TypeReferenceNode
 } from 'typescript';
+import * as webpack from 'webpack';
 
 export { NodeArray };
 
@@ -105,6 +106,22 @@ export function getTypeArguments(property: PropertyDeclaration) {
 
 export function getTypeText(property: PropertyDeclaration) {
   return (getTypeName(property.type) as Identifier).text;
+}
+
+export async function run(config: any) {
+  return new Promise((resolve, reject) => {
+    webpack(config, (err, stats) => {
+      if (err) {
+        reject(err);
+      }
+
+      if (stats.hasErrors()) {
+        reject(stats.toString());
+      }
+
+      resolve(stats);
+    });
+  });
 }
 
 export function byModule(name: string) {
