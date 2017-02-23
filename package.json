@@ -9,20 +9,21 @@
     "type": "git"
   },
   "scripts": {
-    "build": "yarn run lint && yarn run compile && yarn run bundle",
-    "bundle": "rollup -c rollup.config.js >/dev/null 2>&1",
-    "compile": "tsc -p tsconfig.json",
-    "start": "yarn run clean && yarn run copy && nodemon --exec yarn run build -e ts --watch src",
+    "build": "yarn run clean && yarn run copy && yarn run compile",
     "clean": "rimraf dist && mkdir -p dist",
+    "compile": "yarn run lint && yarn run typescript && yarn run rollup",
     "copy": "cp src/package.json dist/package.json && cp README.md dist/README.md",
     "lint": "tslint --project tsconfig.json",
-    "pretest": "yarn run build",
     "mocha": "TS_NODE_PROJECT=test/tsconfig.json mocha \"test/**/*.spec.ts\" --timeout 10000 --compilers ts:ts-node/register",
     "mocha:watch": "yarn run mocha -- --watch --reporter min",
     "prestart": "yarn run clean && yarn run copy",
-    "test": "yarn run test:clean && yarn run test:link && yarn run mocha",
+    "start": "nodemon --exec yarn run compile -e ts --watch src",
+    "pretest": "yarn run build && yarn run test:clean && yarn run test:link",
+    "rollup": "rollup -c rollup.config.js >/dev/null 2>&1",
+    "test": "yarn run mocha",
     "test:clean": "rimraf test/**/*.js",
-    "test:link": "(cd dist && yarn link) && yarn link @ultimate/aot-loader"
+    "test:link": "(cd dist && yarn link) && yarn link @ultimate/aot-loader",
+    "typescript": "tsc -p tsconfig.json"
   },
   "devDependencies": {
     "@angular/common": "4.0.0-beta.8",
