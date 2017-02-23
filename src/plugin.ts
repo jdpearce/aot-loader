@@ -55,9 +55,6 @@ const INJECTOR = /(\w+?)Injector/;
 export class AotPlugin {
   context: AotContext;
 
-  num = 0;
-  numAsync = 0;
-
   files: string[] = [];
 
   // dependencies
