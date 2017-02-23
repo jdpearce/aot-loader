@@ -9,10 +9,10 @@
     "type": "git"
   },
   "scripts": {
-    "build": "yarn run clean && yarn run copy && yarn run lint && yarn run compile && yarn run bundle",
+    "build": "yarn run lint && yarn run compile && yarn run bundle",
     "bundle": "rollup -c rollup.config.js >/dev/null 2>&1",
     "compile": "tsc -p tsconfig.json",
-    "start": "nodemon --exec yarn run build -e ts --watch src",
+    "start": "yarn run clean && yarn run copy && nodemon --exec yarn run build -e ts --watch src",
     "clean": "rimraf dist && mkdir -p dist",
     "copy": "cp src/package.json dist/package.json && cp README.md dist/README.md",
     "lint": "tslint --project tsconfig.json",
@@ -27,7 +27,6 @@
   "devDependencies": {
     "@angular/common": "4.0.0-beta.8",
     "@angular/compiler": "4.0.0-beta.8",
-    "@angular/compiler-cli": "4.0.0-beta.8",
     "@angular/core": "4.0.0-beta.8",
     "@angular/platform-browser": "4.0.0-beta.8",
     "@angular/router": "4.0.0-beta.8",
@@ -36,7 +35,6 @@
     "@types/node": "7.0.0",
     "@types/source-map": "0.5.0",
     "chai": "3.5.0",
-    "core-js": "^2.4.1",
     "mocha": "3.2.0",
     "nodemon": "1.11.0",
     "rimraf": "2.5.4",
@@ -49,6 +47,7 @@
     "zone.js": "0.7.5"
   },
   "dependencies": {
+    "@angular/compiler-cli": "4.0.0-beta.8",
     "magic-string": "0.19.0",
     "source-map": "0.5.6"
   }
