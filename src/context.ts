@@ -16,7 +16,7 @@ export class AotContext extends ModuleResolutionHostAdapter {
     super(host);
   }
 
-  compileResource(fileName: string): Promise<any> {
+  compileResource(fileName: string) {
     if (!this.childCompilers[fileName]) {
       this.childCompilers[fileName] = this.compilation.createChildCompiler(fileName, { filename: fileName });
       this.childCompilers[fileName].context = this.compiler.context;
@@ -35,7 +35,7 @@ export class AotContext extends ModuleResolutionHostAdapter {
       }
     });
 
-    return new Promise((resolve, reject) => {
+    return new Promise<any>((resolve, reject) => {
       childCompiler.runAsChild((err: any, entries: any[], childCompilation: any) => {
         if (err) {
           reject(err);
@@ -48,7 +48,7 @@ export class AotContext extends ModuleResolutionHostAdapter {
     });
   }
 
-  async readResource(fileName: string): Promise<string> {
+  async readResource(fileName: string) {
     const fileExtension = extname(fileName);
     if (!this.resourceExtensions.includes(fileExtension)) {
       this.resourceExtensions.push(fileExtension);
