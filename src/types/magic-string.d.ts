@@ -6,6 +6,7 @@ declare class MagicString {
   prependLeft(index: number, contents: string);
   prependRight(index: number, contents: string);
   overwrite(start: number, end: number, contents: string, store?: boolean);
+  remove(start: number, end: number);
 }
 
 declare module 'magic-string' {

@@ -3,6 +3,7 @@ import {
   Decorator,
   Identifier,
   ImportDeclaration,
+  ImportSpecifier,
   ModuleName,
   NamespaceImport,
   Node,
@@ -66,6 +67,10 @@ export function getInitializer(node: PropertyAssignment) {
 
 export function getModule(dec: ImportDeclaration) {
   return (dec.moduleSpecifier as StringLiteral).text;
+}
+
+export function getName(node: ImportSpecifier) {
+  return node.propertyName ? node.propertyName.text : node.name.text;
 }
 
 export function getNamespace(dec: ImportDeclaration) {

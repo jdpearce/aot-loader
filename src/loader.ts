@@ -57,6 +57,10 @@ export async function aotLoader(source: string, map: string) {
     transformFile.convertLoadChildren();
   }
 
+  if (!/\.ngfactory(\.|$)/.test(this.resourcePath)) {
+    transformFile.removeDecorators();
+  }
+
   if (/templateUrl/.test(source) || /styleUrls/.test(source)) {
     const resources = transformFile
       .getResources()

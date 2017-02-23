@@ -1,18 +1,18 @@
 import MagicString from 'magic-string';
 import { basename } from 'path';
-import { RawSourceMap, SourceMapConsumer, SourceMapGenerator } from 'source-map';
+import { SourceMapConsumer, SourceMapGenerator } from 'source-map';
 import {
   ArrayLiteralExpression,
   CallExpression,
   createSourceFile,
+  Decorator,
   Identifier,
   ImportDeclaration,
   NamedImports,
+  NamespaceImport,
   Node,
   NodeArray,
-  ObjectLiteralExpression,
   PropertyAccessExpression,
-  PropertyAssignment,
   ScriptTarget,
   SourceFile,
   StringLiteral,
@@ -26,6 +26,8 @@ import {
   findNodes,
   flatten,
   getInitializer,
+  getModule,
+  getName,
   getPropertyAssignments,
   normalizePath,
   removeUnnamedImports
@@ -39,11 +41,13 @@ export class TransformFile {
   sourceString: string;
   sourceText: MagicString;
 
-  constructor(public resourcePath: string,
-              public source: string,
-              public aotPlugin: AotPlugin,
-              public generateSourceMap: boolean,
-              public sourceFile?: SourceFile) {
+  constructor(
+    public resourcePath: string,
+    public source: string,
+    public aotPlugin: AotPlugin,
+    public generateSourceMap: boolean,
+    public sourceFile?: SourceFile
+  ) {
     if (!sourceFile) {
       this.sourceFile = createSourceFile(this.resourcePath, this.source, ScriptTarget.Latest);
     }
@@ -149,7 +153,7 @@ export class TransformFile {
     }
   }
 
-  getResources(): string[] {
+  getResources() {
     const properties = getPropertyAssignments(this.sourceFile);
 
     let resources: StringLiteral[] = [];
@@ -166,13 +170,58 @@ export class TransformFile {
     return resources.map(normalizePath);
   }
 
+  removeDecorators() {
+    const imports = findNodes<ImportDeclaration>(this.sourceFile, SyntaxKind.ImportDeclaration)
+      .filter((node) => node.moduleSpecifier.kind === SyntaxKind.StringLiteral)
+      .filter((node) => getModule(node).startsWith('@angular/'))
+      .filter((node) => !node.importClause.name && node.importClause.namedBindings)
+      .map((node) => node.importClause.namedBindings);
+
+    const namespaceImports = imports
+      .filter((node) => node.kind === SyntaxKind.NamespaceImport)
+      .map((node) => (node as NamespaceImport).name.text + '.');
+
+    const namedImports = imports
+      .filter((node) => node.kind === SyntaxKind.NamedImports)
+      .map((node) => (node as NamedImports).elements)
+      .map((elements) => elements.map(getName));
+
+    const angularImports = flatten<string>([...namedImports, ...namespaceImports]);
+
+    if (!angularImports.length) {
+      return;
+    }
+
+    function isAngularImport(node: CallExpression) {
+      const decorator = (node.expression as StringLiteral).text;
+      if (decorator.includes('.')) {
+        return angularImports.includes(decorator.replace(/\..*$/, '') + '.');
+      }
+      return angularImports.includes(decorator);
+    }
+
+    const decorators = findNodes<Decorator>(this.sourceFile, SyntaxKind.Decorator);
+
+    for (const node of decorators) {
+      const expressions = findNodes<CallExpression>(node, SyntaxKind.CallExpression).filter(isAngularImport);
+      for (const expr of expressions) {
+        this.removeNode(node);
+      }
+    }
+  }
+
+  removeNode(node: Node) {
+    this.edited = true;
+    this.sourceText.remove(node.getStart(this.sourceFile), node.getEnd());
+  }
+
   replaceNode(node: Node, contents: string) {
     this.edited = true;
     const store = node.kind === SyntaxKind.Identifier;
     this.sourceText.overwrite(node.getStart(this.sourceFile), node.getEnd(), contents, store);
   }
 
-  transpile(): { outputText: string, sourceMap: RawSourceMap } {
+  transpile() {
     const result = transpileModule(this.sourceText.toString(), {
       compilerOptions: {
         ...this.aotPlugin.parsedConfig.options,
