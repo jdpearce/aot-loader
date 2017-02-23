@@ -39,14 +39,14 @@ import { AotContext } from './context';
 import { AngularCompilerOptions, AotCompilerHost } from './compiler';
 
 export interface AotConfig {
-  entryModule?: string;
-  tsConfig: string;
+  entryModule?: string,
+  tsConfig: string
 }
 
 export interface GeneratedFile {
-  genFileUrl: string;
-  source: string;
-  srcFileUrl: string;
+  genFileUrl: string,
+  source: string,
+  srcFileUrl: string
 }
 
 const FILE_EXTENSION = /\.[^/.]+$/;
