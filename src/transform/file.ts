@@ -57,7 +57,7 @@ export class TransformFile {
   }
 
   convertBootstrap(moduleName: string) {
-    const calls = findNodes<CallExpression>(this.sourceFile, SyntaxKind.CallExpression);
+    const calls = findNodes<CallExpression>(this.sourceFile, SyntaxKind.CallExpression, this.sourceFile, true);
 
     const bootstraps = calls
       .filter((node) => node.expression.kind === SyntaxKind.PropertyAccessExpression)
