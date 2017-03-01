@@ -199,11 +199,15 @@ export class AotPlugin {
         const isNativeModule = request.request.charAt(0) !== '.';
         const isNodeModule = /node_modules/.test(request.request);
         const isResource = this.context.resourceExtensions.includes(requestExtension);
+        const isCompiling = this.context.compiling;
 
         try {
-          if (!isResource && !isNativeModule && !isNodeModule) {
+          if (!isCompiling && !isResource && !isNativeModule && !isNodeModule) {
             await this.compilePromise;
           }
+        } catch (err) {
+          // do nothing with the error because it's already handled
+          // not catching it will result in an unhandled rejection error
         } finally {
           callback();
         }

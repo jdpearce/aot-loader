@@ -11,6 +11,7 @@ export class AotContext extends ModuleResolutionHostAdapter {
   compilation: any;
   context: Context = createContext(Object.assign({require}, global));
   resourceExtensions: string[] = [];
+  compiling = false;
 
   constructor(host: ModuleResolutionHost) {
     super(host);
@@ -35,14 +36,18 @@ export class AotContext extends ModuleResolutionHostAdapter {
       }
     });
 
-    return new Promise<any>((resolve, reject) => {
+    this.compiling = true;
+
+    return new Promise<any>((resolve) => {
       childCompiler.runAsChild((err: any, entries: any[], childCompilation: any) => {
         if (err) {
-          reject(err);
+          childCompilation.errors.push(err);
+          return resolve();
         }
         if (!existsInParent) {
           delete this.compilation.assets[fileName];
         }
+        this.compiling = false;
         resolve(childCompilation.assets[fileName].source());
       });
     });
