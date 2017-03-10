@@ -112,11 +112,11 @@ export async function run(config: any) {
   return new Promise((resolve, reject) => {
     webpack(config, (err, stats) => {
       if (err) {
-        reject(err);
+        return reject(err);
       }
 
       if (stats.hasErrors()) {
-        reject(stats.toString());
+        return reject(stats.toString());
       }
 
       resolve(stats);
