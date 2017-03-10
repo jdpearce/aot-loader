@@ -2,11 +2,12 @@ import { expect } from 'chai';
 import { CallExpression, ImportDeclaration, PropertyAccessExpression, SyntaxKind } from 'typescript';
 
 import * as path from 'path';
+import * as webpack from 'webpack';
 
 import { createSource, findNodes, getModule, run } from '../utils';
 import { config } from './assets/webpack.config';
 
-describe('AST code swapping', async () => {
+describe('AST code swapping', () => {
   let sourceFile;
   let imports;
   let calls;

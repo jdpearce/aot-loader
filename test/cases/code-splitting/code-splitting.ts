@@ -1,18 +1,18 @@
 import { expect } from 'chai';
-
 import { resolve } from 'path';
+import * as webpack from 'webpack';
 
-import { createSource, findNodes, getModule, run } from '../utils';
+import { run } from '../utils';
 import { config } from './assets/webpack.config';
 
-describe('Code Splitting', async () => {
+
+describe('Code Splitting', () => {
   const assetsPath = resolve(__dirname, 'assets/app');
   const ngfactoryPath = resolve(__dirname, 'assets/ngfactory/app');
   const find = (path, chunk, dir) =>
     chunk.modules.find((module) => module.resource === resolve(dir, path));
 
   let stats;
-
   before(async () => {
     try {
       stats = await run(config);
