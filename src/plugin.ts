@@ -97,12 +97,15 @@ export class AotPlugin {
     }
 
     const tsConfigPath = resolve(process.cwd(), config.tsConfig);
-    this.tsConfig = require(tsConfigPath);
-
+    try {
+      this.tsConfig = JSON.parse(sys.readFile(tsConfigPath));
+    } catch (err) {
+      throw new Error(`Error parsing tsconfig.json: ${err}`);
+    }
     this.parsedConfig = parseJsonConfigFileContent(this.tsConfig, sys, dirname(tsConfigPath), null, tsConfigPath);
-
     const angularCompilerOptions = this.tsConfig.angularCompilerOptions || {};
     angularCompilerOptions.basePath = angularCompilerOptions.basePath || dirname(tsConfigPath);
+
     angularCompilerOptions.genDir = join(angularCompilerOptions.basePath, angularCompilerOptions.genDir || '__generated');
 
     if (config.entryModule) {
