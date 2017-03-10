@@ -174,7 +174,7 @@ export class TransformFile {
     const imports = findNodes<ImportDeclaration>(this.sourceFile, SyntaxKind.ImportDeclaration)
       .filter((node) => node.moduleSpecifier.kind === SyntaxKind.StringLiteral)
       .filter((node) => getModule(node).startsWith('@angular/'))
-      .filter((node) => !node.importClause.name && node.importClause.namedBindings)
+      .filter((node) => node.importClause && !node.importClause.name && node.importClause.namedBindings)
       .map((node) => node.importClause.namedBindings);
 
     const namespaceImports = imports
