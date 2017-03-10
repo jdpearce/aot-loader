@@ -1,10 +1,12 @@
-machine:
-  node:
-    version: 7.0.0
-  post:
-    - curl -o- -L https://yarnpkg.com/install.sh | bash
-dependencies:
-  cache_directories:
-    - "~/.yarn-cache"
-  override:
-    - yarn install
+version: 2
+jobs:
+  build:
+    working_directory: /tmp
+
+    docker:
+      - image: node:7.7
+
+    steps:
+      - checkout
+      - run: yarn install
+      - run: yarn run test
