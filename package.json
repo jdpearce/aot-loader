@@ -11,7 +11,7 @@
   "scripts": {
     "build": "yarn run clean && yarn run copy && yarn run compile",
     "clean": "rimraf dist && mkdir -p dist",
-    "compile": "yarn run lint && yarn run typescript && yarn run rollup",
+    "compile": "yarn run lint & (yarn run typescript && yarn run rollup)",
     "copy": "cp src/package.json dist/package.json && cp README.md dist/README.md",
     "lint": "tslint --project tsconfig.json",
     "prestart": "yarn run clean && yarn run copy",
