@@ -25,13 +25,13 @@ export async function aotLoader(source: string, map: string) {
 
   const transformFile = new TransformFile(this.resourcePath, source, aotPlugin, !isGenerated, sourceFile);
 
+  const { angularCompilerOptions } = aotPlugin.tsConfig;
+
+  const basePath = normalize(angularCompilerOptions.basePath);
+  const genDir = normalize(angularCompilerOptions.genDir);
+
   if (source.match(/bootstrapModule/ig)) {
-    const { angularCompilerOptions } = aotPlugin.tsConfig;
-
-    const basePath = normalize(angularCompilerOptions.basePath);
-    const genDir = normalize(angularCompilerOptions.genDir);
     const dirName = normalize(dirname(this.resourcePath));
-
     const genRelativeToBase = relative(basePath, genDir);
     const fileRelativeToBase = relative(basePath, dirName);
     const genRelativeToFile = relative(fileRelativeToBase, genRelativeToBase);
@@ -54,7 +54,7 @@ export async function aotLoader(source: string, map: string) {
   }
 
   if (/\.ngfactory(\.|$)/.test(this.resourcePath) && /loadChildren/.test(source)) {
-    transformFile.convertLoadChildren();
+    transformFile.convertLoadChildren(basePath, genDir);
   }
 
   if (!/\.ngfactory(\.|$)/.test(this.resourcePath)) {

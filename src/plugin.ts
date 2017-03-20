@@ -20,6 +20,7 @@ import {
   Program,
   ScriptTarget,
   SourceFile,
+  StringLiteral,
   SyntaxKind,
   sys
 } from 'typescript';
@@ -143,6 +144,8 @@ export class AotPlugin {
         // if we haven't compiled yet, we need to go through all the possible files
         // in order to resolve the metadata for the whole codebase
         try {
+          this.createSourceFiles(this.parsedConfig.fileNames, compilation);
+
           this.compilePromise = this.compileFiles(this.parsedConfig.fileNames);
           await this.compilePromise;
           this.ranInitialCompile = true;
@@ -235,6 +238,35 @@ export class AotPlugin {
   }
 
   async compileFiles(files: string[], checkDependencies: boolean = true): Promise<void> {
+    const {normal} = this.context.compiler.resolvers;
+
+    function resolveModule(context: string, path: string) {
+      return new Promise<string>((resolve, reject) => {
+        normal.resolve({}, context, path, (err: string, path: string, info: any) => {
+          if (err) {
+            return reject(err);
+          }
+          resolve(info.relativePath);
+        });
+      });
+    }
+
+    for (const file of files) {
+      const sourceFile = this.sourceFileCache.get(file);
+      const loadChildren = getPropertyAssignments(sourceFile).filter(byPropertyName('loadChildren'));
+
+      for (const child of loadChildren) {
+        const [path, module] = getInitializer(child).split('#');
+        try {
+          const resolvedModule = await resolveModule(dirname(file), path);
+
+          (child.initializer as StringLiteral).text = `${resolvedModule}#${module}`;
+        } catch (err) {
+          throw err;
+        }
+      }
+    }
+
     this.files = this.removeDeletedFiles(filterDuplicates(this.files.concat(files)));
     // store the compilation in a Promise so we can delay other parts of the build
     // until this has finished
@@ -400,8 +432,15 @@ export class AotPlugin {
     const loadChildren = getPropertyAssignments(sourceFile)
       .filter(byPropertyName('loadChildren'))
       .map((child) => getInitializer(child).split('#'))
-      .map(([path]) => resolveModuleName(path, file, this.parsedConfig.options, this.host))
-      .map((resolved) => resolved.resolvedModule.resolvedFileName);
+      .map(([path]) => {
+        const resolved = resolveModuleName(path, file, this.parsedConfig.options, this.host);
+
+        if (!resolved.resolvedModule) {
+          throw new Error(`Error: ${file} attempted to import ${path}, but it doesn't exist`);
+        }
+
+        return resolved.resolvedModule.resolvedFileName;
+      });
 
     for (const child of loadChildren) {
       const dependencies = this.moduleDependencies.get(file);

@@ -1,5 +1,5 @@
 import MagicString from 'magic-string';
-import { basename } from 'path';
+import { basename, dirname, join, normalize, relative, resolve } from 'path';
 import { SourceMapConsumer, SourceMapGenerator } from 'source-map';
 import {
   ArrayLiteralExpression,
@@ -35,6 +35,8 @@ import {
 
 const loadChildrenTemplate =
   ([p, m]: string[]) => `loadChildren:()=>__TROPMI__('${p}.ngfactory').then((r)=>r.${m}NgFactory)`;
+
+const EXT = /(\.ts|\.d\.ts|\.js|\.jsx|\.tsx)$/;
 
 export class TransformFile {
   edited = false;
@@ -79,12 +81,22 @@ export class TransformFile {
       .forEach((call) => this.replaceNode(call.arguments[0], moduleName + 'NgFactory'));
   }
 
-  convertLoadChildren() {
+  convertLoadChildren(basePath: string, genDir: string) {
     const assignments = getPropertyAssignments(this.sourceFile)
       .filter(byPropertyName('loadChildren'));
 
     for (const node of assignments) {
-      this.replaceNode(node, loadChildrenTemplate(getInitializer(node).split('#')));
+      const [path, module] = getInitializer(node).split('#');
+
+      const dirName = normalize(dirname(this.resourcePath));
+      const genRelativeToBase = relative(basePath, genDir);
+      const fileRelativeToBase = relative(basePath, dirName);
+      const genRelativeToFile = relative(fileRelativeToBase, genRelativeToBase);
+
+      const genToFile = join(genRelativeToFile, path.replace(EXT, ''));
+      const factoryPath = './' + genToFile.replace(/\\/g, '/');
+
+      this.replaceNode(node, loadChildrenTemplate([factoryPath, module]));
     }
   }
 
