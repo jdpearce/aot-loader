@@ -209,7 +209,7 @@ export class AotPlugin {
         const isCompiling = this.context.compiling;
 
         try {
-          if (!isCompiling && !isResource && !isNativeModule && !isNodeModule) {
+          if (!isCompiling && !isResource && !isNativeModule && !isNodeModule && !request.context.skipCompile) {
             await this.compilePromise;
           }
         } catch (err) {
@@ -243,7 +243,7 @@ export class AotPlugin {
 
     function resolveModule(context: string, path: string) {
       return new Promise<string>((resolve, reject) => {
-        normal.resolve({}, context, path, (err: string, path: string, info: any) => {
+        normal.resolve({ skipCompile: true }, context, path, (err: string, path: string, info: any) => {
           if (err) {
             return reject(err);
           }
