@@ -59,8 +59,9 @@ export class AotPlugin {
   files: string[] = [];
 
   // dependencies
-  componentDependencies: Map<string, string[]> = new Map<string, string[]>();
-  moduleDependencies: Map<string, string[]> = new Map<string, string[]>();
+  componentDependencies = new Map<string, string[]>();
+  moduleDependencies = new Map<string, string[]>();
+  parentDependencies = new Map<string, string[]>();
 
   // misc
   compilePromise: Promise<void> = Promise.resolve();
@@ -68,15 +69,15 @@ export class AotPlugin {
   entryModule: { path: string, module: string };
 
   // timing
-  prevTimestamps: Map<string, number> = new Map<string, number>();
+  prevTimestamps = new Map<string, number>();
   startTime = Date.now();
 
   // resources
-  resources: Map<string, string[]> = new Map<string, string[]>();
-  resourcesDependencies: Map<string, string[]> = new Map<string, string[]>();
+  resources = new Map<string, string[]>();
+  resourcesDependencies = new Map<string, string[]>();
 
   // cache
-  sourceFileCache: Map<string, SourceFile> = new Map<string, SourceFile>();
+  sourceFileCache = new Map<string, SourceFile>();
   symbols: StaticSymbol[] = [];
 
   // tsconfig.json
@@ -345,9 +346,11 @@ export class AotPlugin {
       const { genFileUrl, source, srcFileUrl } = generatedFile;
       const emitPath = this.calculateEmitPath(genFileUrl);
       const emitFileName = emitPath.replace(FILE_EXTENSION, '');
+
       if (/ngsummary\.json$/.test(emitPath)) {
         continue;
       }
+
       const sourceFile = createSourceFile(emitPath, source, ScriptTarget.Latest);
       this.sourceFileCache.set(emitPath, sourceFile);
 
@@ -366,6 +369,11 @@ export class AotPlugin {
           if (!dependencies.includes(srcFileUrl)) {
             this.componentDependencies.set(path, this.removeDeletedFiles([...dependencies, srcFileUrl]));
           }
+        }
+      } else {
+        const parentDependencies = this.parentDependencies.get(srcFileUrl);
+        if (parentDependencies && checkDependencies) {
+          await this.compileFiles(parentDependencies, false);
         }
       }
 
@@ -422,10 +430,17 @@ export class AotPlugin {
       if (!this.moduleDependencies.has(file)) {
         this.moduleDependencies.set(file, []);
       }
+      if (!this.parentDependencies.has(path)) {
+        this.parentDependencies.set(path, []);
+      }
       const dependencies = this.moduleDependencies.get(file);
       if (!dependencies.includes(path)) {
         fileDependencies.push(path);
         this.moduleDependencies.set(file, this.removeDeletedFiles([...dependencies, path]));
+      }
+      const parentDependencies = this.parentDependencies.get(path);
+      if (!parentDependencies.includes(file)) {
+        this.parentDependencies.set(path, this.removeDeletedFiles([...parentDependencies, file]));
       }
     }
 
