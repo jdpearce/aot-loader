@@ -247,7 +247,7 @@ export class AotPlugin {
           if (err) {
             return reject(err);
           }
-          resolve(info.relativePath);
+          resolve(path);
         });
       });
     }

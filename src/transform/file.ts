@@ -93,7 +93,7 @@ export class TransformFile {
       const fileRelativeToBase = relative(basePath, dirName);
       const genRelativeToFile = relative(fileRelativeToBase, genRelativeToBase);
 
-      const genToFile = join(genRelativeToFile, path.replace(EXT, ''));
+      const genToFile = join(genRelativeToFile, relative(basePath, path).replace(EXT, ''));
       const factoryPath = './' + genToFile.replace(/\\/g, '/');
 
       this.replaceNode(node, loadChildrenTemplate([factoryPath, module]));
