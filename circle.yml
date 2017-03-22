@@ -1,6 +1,8 @@
 version: 2
 jobs:
   build:
+    working_directory: ~/aot
+
     docker:
       - image: node:7.7
 
