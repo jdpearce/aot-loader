@@ -3,7 +3,8 @@ import * as path from 'path';
 
 const tests = [
   'code-splitting',
-  'refactor'
+  'refactor',
+  'refactor.weird'
 ];
 
 const run = (name: string) => {
